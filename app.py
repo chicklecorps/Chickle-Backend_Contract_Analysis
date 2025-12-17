@@ -1,18 +1,16 @@
 from flask import Flask, request, jsonify
+import google.generativeai as genai
 from flask_cors import CORS
 import pdfplumber
 from io import BytesIO
 import re
-import google.genai as genai
 
 app = Flask(__name__)
 CORS(app)
 
-# Gemini API setup (new SDK syntax)
-model = genai.TextGenerationModel(
-    model="gemini-2.0-flash",
-    api_key="AIzaSyCHWzcxqbfCpnkuLw6uxjhBV3TK3F4cock"
-)
+# Gemini API setup
+genai.configure(api_key="AIzaSyCHWzcxqbfCpnkuLw6uxjhBV3TK3F4cock")
+model = genai.GenerativeModel("gemini-2.0-flash")
 
 def clean_markdown(text):
     text = re.sub(r'<[^>]+>', '', text)
@@ -62,7 +60,7 @@ Only answer contract-related legal questions. If not related to contracts, respo
 
 User query: {query}
 """
-        response = model.generate_text(final_prompt)
+        response = model.generate_content(final_prompt)
         return clean_markdown(response.text)
 
     except Exception as e:
@@ -150,7 +148,5 @@ The user uploaded a contract and asked the following. Analyze and answer based o
     return jsonify({"response": response_text.strip()})
 
 if __name__ == "__main__":
-    import os
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port, debug=True)
+    app.run(host="0.0.0.0", port=5000, debug=True)
     print("[INFO] Chickle Contract Analyzer Backend is running...")
